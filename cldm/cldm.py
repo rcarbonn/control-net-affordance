@@ -2,6 +2,7 @@ import einops
 import torch
 import torch as th
 import torch.nn as nn
+import bitsandbytes as bnb
 
 from ldm.modules.diffusionmodules.util import (
     conv_nd,
@@ -419,7 +420,8 @@ class ControlLDM(LatentDiffusion):
         if not self.sd_locked:
             params += list(self.model.diffusion_model.output_blocks.parameters())
             params += list(self.model.diffusion_model.out.parameters())
-        opt = torch.optim.AdamW(params, lr=lr)
+        # opt = torch.optim.AdamW(params, lr=lr)
+        opt = bnb.optim.Adam8bit(params, lr=lr)
         return opt
 
     def low_vram_shift(self, is_diffusing):

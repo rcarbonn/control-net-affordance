@@ -256,6 +256,11 @@ class MemoryEfficientAttnBlock(nn.Module):
             (q, k, v),
         )
         out = xformers.ops.memory_efficient_attention(q, k, v, attn_bias=None, op=self.attention_op)
+        # q = q[...,:128].contiguous()
+        # k = k[...,:128].contiguous()
+        # v = v[...,:128].contiguous()
+        # print(q.shape)
+        # out = xformers.ops.memory_efficient_attention(q, k, v)
 
         out = (
             out.unsqueeze(0)

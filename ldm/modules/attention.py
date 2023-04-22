@@ -231,6 +231,8 @@ class MemoryEfficientCrossAttention(nn.Module):
 
         # actually compute the attention, what we cannot get enough of
         out = xformers.ops.memory_efficient_attention(q, k, v, attn_bias=None, op=self.attention_op)
+        # print(q.shape)
+        # out = xformers.ops.memory_efficient_attention(q[:,:,:128].contiguous(), k[:,:,:128].contiguous(), v[:,:,:128].contiguous())
 
         if exists(mask):
             raise NotImplementedError

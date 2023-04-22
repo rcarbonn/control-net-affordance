@@ -26,6 +26,7 @@ from ldm.modules.distributions.distributions import normal_kl, DiagonalGaussianD
 from ldm.models.autoencoder import IdentityFirstStage, AutoencoderKL
 from ldm.modules.diffusionmodules.util import make_beta_schedule, extract_into_tensor, noise_like
 from ldm.models.diffusion.ddim import DDIMSampler
+import bitsandbytes as bnb
 
 
 __conditioning_keys__ = {'concat': 'c_concat',
@@ -588,7 +589,7 @@ class LatentDiffusion(DDPM):
 
     @rank_zero_only
     @torch.no_grad()
-    def on_train_batch_start(self, batch, batch_idx, dataloader_idx):
+    def on_train_batch_start(self, batch, batch_idx):
         # only for very first batch
         if self.scale_by_std and self.current_epoch == 0 and self.global_step == 0 and batch_idx == 0 and not self.restarted_from_ckpt:
             assert self.scale_factor == 1., 'rather not use custom rescaling and std-rescaling simultaneously'
@@ -1284,7 +1285,8 @@ class LatentDiffusion(DDPM):
         if self.learn_logvar:
             print('Diffusion model optimizing logvar')
             params.append(self.logvar)
-        opt = torch.optim.AdamW(params, lr=lr)
+        # opt = torch.optim.AdamW(params, lr=lr)
+        opt = bnb.optim.Adam8bit(params, lr=lr)
         if self.use_scheduler:
             assert 'target' in self.scheduler_config
             scheduler = instantiate_from_config(self.scheduler_config)
