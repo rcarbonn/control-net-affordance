@@ -10,7 +10,7 @@ from cldm.model import create_model, load_state_dict
 
 # Configs
 resume_path = './models/control_sd15_ini2.ckpt'
-batch_size = 1
+batch_size = 4
 logger_freq = 30
 learning_rate = 1e-5
 sd_locked = True
@@ -26,12 +26,14 @@ model.only_mid_control = only_mid_control
 
 
 # Misc
-data_dir = '/proj'
+data_dir = '/home/ubuntu/vlr_proj'
 dataset = ADE20kAffordanceDataset(data_dir)
-dataloader = DataLoader(dataset, num_workers=1, batch_size=batch_size, shuffle=True)
+dataloader = DataLoader(dataset, num_workers=0, batch_size=batch_size, shuffle=True)
 logger = ImageLogger(batch_frequency=logger_freq)
-trainer = pl.Trainer(gpus=1, precision=16, callbacks=[logger], accumulate_grad_batches=4)
+model_ckpt = pl.callbacks.ModelCheckpoint(monitor="step", every_n_train_steps=1000, save_top_k=1)
+trainer = pl.Trainer(gpus=1, precision=32, callbacks=[logger, model_ckpt], accumulate_grad_batches=2, max_epochs=2, enable_checkpointing=True)
 
 
 # Train!
 trainer.fit(model, dataloader)
+trainer.save_checkpoint("new1.ckpt")
