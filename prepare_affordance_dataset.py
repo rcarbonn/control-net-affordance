@@ -93,8 +93,10 @@ class ADE20kAffordanceDataset(Dataset):
         source = np.array(self.transform_source(affordance_seg))
         source = source/255.0
         # prompt = self.prompt_dict[prompt_id]
+
+        depth_map = img_to_depth(np.asarray(self.transform_target(Image.open(img_file_name))))
         
-        return dict(jpg = target,  hint = source)
+        return dict(jpg = target,  hint = source, depth = depth_map)
 
 
 if __name__ == '__main__':
@@ -105,13 +107,15 @@ if __name__ == '__main__':
         data = dataset[i]
         jpg = data['jpg']   
         hint = data['hint']
-        # txt = data['txt']
-        print(i)
+        depth = data['depth']
         jpg = torch.from_numpy(jpg).permute(2, 0, 1)
         hint = torch.from_numpy(hint).permute(2, 0, 1)
-        source_dest = '/home/anish/Documents/vlr/project/datasets/Affordance_generated/source/'
-        save_image([jpg], source_dest+'src{}.png'.format(i))
-        aff_dest = '/home/anish/Documents/vlr/project/datasets/Affordance_generated/affordance/'
-        save_image([hint], aff_dest+'aff{}.png'.format(i))
-        # depth_dest = '/home/anish/Documents/vlr/project/datasets/Affordance_generated/depth/'
-        # save_image([jpg], depth_dest+'test{}.png'.format(i))
+        depth = torch.from_numpy(depth).permute(2, 0, 1)    
+        # print(depth)
+        # source_dest = '/home/anish/Documents/vlr/project/datasets/Affordance_generated/source/'
+        # save_image([jpg], source_dest+'src{}.png'.format(i))
+        # aff_dest = '/home/anish/Documents/vlr/project/datasets/Affordance_generated/affordance/'
+        # save_image([hint], aff_dest+'aff{}.png'.format(i))
+        depth_dest = '/home/anish/Documents/vlr/project/datasets/Affordance_generated/depth/'
+        save_image([depth], depth_dest+'test{}.png'.format(i))
+        print("Saved image {}".format(i))
