@@ -11,10 +11,10 @@ from cldm.model import create_model, load_state_dict
 # Configs
 resume_path = './models/control_sd15_ini.ckpt'
 batch_size = 1
-logger_freq = 30
+logger_freq = 100
 learning_rate = 1e-5
 sd_locked = True
-only_mid_control = True
+only_mid_control = False
 
 
 # First use cpu to load models. Pytorch Lightning will automatically move it to GPUs.
