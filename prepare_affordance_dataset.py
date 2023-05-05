@@ -17,6 +17,12 @@ AFFORDANCE_COLOR_CODES = {
     "grasp" : [15, 50, 70],
 }
 
+AFFORDANCE_COLOR_CODES_MERGING = {
+    "sit" : [50,50,50],
+    "run" : [100, 100, 100],
+    "grasp" : [150, 150, 150],
+}
+
 class ADE20kAffordanceDataset(Dataset):
     def __init__(self, data_dir, data_type='training'):
         self.ade20k_path = os.path.join(data_dir, 'ADE20K_2021_17_01')
@@ -63,6 +69,9 @@ class ADE20kAffordanceDataset(Dataset):
         relationship_file = os.path.join(self.affordance_path, self.affordance_train_paths[idx] + '_relationship.txt')
         # prompt_id = "ADE_train_{0:08d}".format(i+1)
 
+        depth_map = img_to_depth(np.asarray(self.transform_target(Image.open(img_file_name))))
+        merged_map = np.copy(depth_map)
+
         run_ids = []
         sit_ids = []
         grasp_ids = []
@@ -82,21 +91,37 @@ class ADE20kAffordanceDataset(Dataset):
             seg = np.array(io)
         obj_ids = seg[:,:,2]
         affordance_seg = np.zeros_like(seg)
+        merged_map = np.zeros_like(seg)
         for obj in sit_ids:
             affordance_seg[obj_ids == obj] = AFFORDANCE_COLOR_CODES['sit']
+            # MAKE 3RD CHANNEL OF MERGED MAP 1 FOR SIT
+            merged_map[obj_ids == obj] = 75
+
         for obj in grasp_ids:
             affordance_seg[obj_ids == obj] = AFFORDANCE_COLOR_CODES['grasp']
+            merged_map[obj_ids == obj] = 150
+        
+        for obj in run_ids:
+            affordance_seg[obj_ids == obj] = AFFORDANCE_COLOR_CODES['run']
+            merged_map[obj_ids == obj] = 225
         
         affordance_seg = Image.fromarray(affordance_seg)
         target = np.asarray(self.transform_target(Image.open(img_file_name)))
         target = target/127.5 - 1
         source = np.array(self.transform_source(affordance_seg))
         source = source/255.0
-        # prompt = self.prompt_dict[prompt_id]
 
-        depth_map = img_to_depth(np.asarray(self.transform_target(Image.open(img_file_name))))
+        merged_map = Image.fromarray(merged_map)
+        merged_map = np.asarray(self.transform_target(merged_map))
+        merged_map = merged_map/255.0
+        # copy first channel of depth map to first and second channels of merged map
+        merged_map[:,:,0] = depth_map[:,:,0]
+        # set second channel of merged map to 0 and third channel to 1 for grasp
+        merged_map[:,:,1] = merged_map[:,:,1] * (merged_map[:,:,2] != 150.0/255.0)
+        # set third channel of merged map to 0 for run
+        merged_map[:,:,2] = merged_map[:,:,2] * (merged_map[:,:,2] != 225.0/255)
         
-        return dict(jpg = target,  hint = source, depth = depth_map)
+        return dict(jpg = target,  hint = source, depth = depth_map, merged = merged_map)
 
 
 if __name__ == '__main__':
@@ -108,14 +133,22 @@ if __name__ == '__main__':
         jpg = data['jpg']   
         hint = data['hint']
         depth = data['depth']
-        jpg = torch.from_numpy(jpg).permute(2, 0, 1)
-        hint = torch.from_numpy(hint).permute(2, 0, 1)
-        depth = torch.from_numpy(depth).permute(2, 0, 1)    
-        # print(depth)
-        # source_dest = '/home/anish/Documents/vlr/project/datasets/Affordance_generated/source/'
-        # save_image([jpg], source_dest+'src{}.png'.format(i))
-        # aff_dest = '/home/anish/Documents/vlr/project/datasets/Affordance_generated/affordance/'
-        # save_image([hint], aff_dest+'aff{}.png'.format(i))
-        depth_dest = '/home/anish/Documents/vlr/project/datasets/Affordance_generated/depth/'
-        save_image([depth], depth_dest+'test{}.png'.format(i))
-        print("Saved image {}".format(i))
+        merged = data['merged']
+        try:
+            jpg = torch.from_numpy(jpg).permute(2, 0, 1)
+            hint = torch.from_numpy(hint).permute(2, 0, 1)
+            depth = torch.from_numpy(depth).permute(2, 0, 1)    
+            merged = torch.from_numpy(merged).permute(2, 0, 1)
+            # print(depth)
+            source_dest = '/home/anish/Documents/vlr/project/datasets/Affordance_generated/source/'
+            save_image([jpg], source_dest+'src{}.png'.format(i))
+            aff_dest = '/home/anish/Documents/vlr/project/datasets/Affordance_generated/affordance/'
+            save_image([hint], aff_dest+'aff{}.png'.format(i))
+            depth_dest = '/home/anish/Documents/vlr/project/datasets/Affordance_generated/depth/'
+            save_image([depth], depth_dest+'test{}.png'.format(i))
+            merged_dest = '/home/anish/Documents/vlr/project/datasets/Affordance_generated/combined/'
+            save_image([merged], merged_dest+'test{}.png'.format(i))
+            print("Saved image {}".format(i))
+        except:
+            print("Error saving image {}".format(i))
+            continue
