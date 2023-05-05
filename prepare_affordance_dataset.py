@@ -17,12 +17,6 @@ AFFORDANCE_COLOR_CODES = {
     "grasp" : [15, 50, 70],
 }
 
-AFFORDANCE_COLOR_CODES_MERGING = {
-    "sit" : [50,50,50],
-    "run" : [100, 100, 100],
-    "grasp" : [150, 150, 150],
-}
-
 class ADE20kAffordanceDataset(Dataset):
     def __init__(self, data_dir, data_type='training'):
         self.ade20k_path = os.path.join(data_dir, 'ADE20K_2021_17_01')
