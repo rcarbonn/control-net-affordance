@@ -7,6 +7,7 @@ from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 from torchvision.utils import save_image
+import cv2
 
 
 AFFORDANCE_COLOR_CODES = {
@@ -30,16 +31,29 @@ class ADE20kAffordanceDataset(Dataset):
         self.affordance_train_file_path = os.path.join(self.affordance_path, 'file_path', 'train_file_path.json')
         with open(self.affordance_train_file_path, 'r') as f:
             self.affordance_train_paths = json.load(f)
+
+        self.affordance_val_file_path = os.path.join(self.affordance_path, 'file_path', 'val_file_path.json')
+        with open(self.affordance_val_file_path, 'r') as f:
+            self.affordance_val_paths = json.load(f)
         
         print("Loading captions...")
         self.prompt_train_file_path = os.path.join(self.prompt_path, 'ade20k_train_captions.jsonl')
         with open(self.prompt_train_file_path, 'r') as f:
-            self.prompt_list = list(f)
+            self.prompt_train_list = list(f)
 
-        self.prompt_dict = {}
-        for json_str in self.prompt_list:
+        self.prompt_val_file_path = os.path.join(self.prompt_path, 'ade20k_validation_captions.jsonl')
+        with open(self.prompt_val_file_path, 'r') as f:
+            self.prompt_val_list = list(f)
+
+        self.prompt_train_dict = {}
+        self.prompt_val_dict = {}
+        for json_str in self.prompt_train_list:
             j = json.loads(json_str)
-            self.prompt_dict[j["image_id"]] = j["caption"]
+            self.prompt_train_dict[j["image_id"]] = j["caption"]
+        for json_str in self.prompt_val_list:
+            j = json.loads(json_str)
+            # print(j["image_id"])
+            self.prompt_val_dict[j["image_id"]] = j["caption"]
         print("Done.")
         
         self.transform_source = transforms.Compose([
@@ -52,14 +66,31 @@ class ADE20kAffordanceDataset(Dataset):
         ])
 
     def __len__(self):
-        return len(self.affordance_train_paths)
+        if self.data_type=='training':
+            return len(self.affordance_train_paths)
+        else:
+            return len(self.affordance_val_paths)
     
     def __getitem__(self, idx):
-        i = int(self.affordance_train_paths[idx].split('_')[-1].split('.')[0]) - 1
+        if self.data_type=='training':
+            i = int(self.affordance_train_paths[idx].split('_')[-1].split('.')[0]) - 1
+            relationship_file = os.path.join(self.affordance_path, self.affordance_train_paths[idx] + '_relationship.txt')
+            prompt_id = "ADE_train_{0:08d}".format(i+1)
+            prompt = self.prompt_train_dict[prompt_id]
+        else:
+            i = int(self.affordance_val_paths[idx].split('_')[-1].split('.')[0]) - 1
+            temp_path = self.affordance_val_paths[idx].split('/')
+            temp_path[0] = 'validation'
+            temp_path = os.path.join(*temp_path)
+            # print(temp_path)
+            relationship_file = os.path.join(self.affordance_path, temp_path + '_relationship.txt')
+            prompt_id = "ADE_train_{0:08d}".format(i+1)
+            prompt = self.prompt_train_dict[prompt_id]
+
         img_file_name = os.path.join(self.data_dir, '{}/{}'.format(self.index_ade20k['folder'][i], self.index_ade20k['filename'][i]))
         seg_file_name = img_file_name.replace('.jpg', '_seg.png')
-        relationship_file = os.path.join(self.affordance_path, self.affordance_train_paths[idx] + '_relationship.txt')
-        prompt_id = "ADE_train_{0:08d}".format(i+1)
+        # relationship_file = os.path.join(self.affordance_path, self.affordance_train_paths[idx] + '_relationship.txt')
+        # prompt_id = "ADE_train_{0:08d}".format(i+1)
 
         run_ids = []
         sit_ids = []
@@ -90,20 +121,23 @@ class ADE20kAffordanceDataset(Dataset):
         target = target/127.5 - 1
         source = np.array(self.transform_source(affordance_seg))
         source = source/255.0
-        prompt = self.prompt_dict[prompt_id]
         
         return dict(jpg = target, txt = prompt,  hint = source)
 
 
 if __name__ == '__main__':
-    data_dir = '/proj'
-    dataset = ADE20kAffordanceDataset(data_dir)
+    data_dir = '/home/alchemist/storage/vlr_data'
+    dataset = ADE20kAffordanceDataset(data_dir, data_type='val')
     print(len(dataset))
-    for i in range(10):
+    for i in [17,22,30,43]:
         data = dataset[i]
         jpg = data['jpg']
         hint = data['hint']
         txt = data['txt']
         print(txt)
         print(jpg.shape, hint.shape)
-        # save_image([jpg, hint], 'test{}.png'.format(i))
+        hint_img = Image.fromarray((hint*255).astype(np.uint8))
+        jpg_img = Image.fromarray(((jpg+1)*127.5).astype(np.uint8))
+        hint_img.save("val_hint_{}.png".format(i))
+        jpg_img.save("val_jpg_{}.png".format(i))
+        # save_image([hint], 'val_hint_{}.png'.format(i))
