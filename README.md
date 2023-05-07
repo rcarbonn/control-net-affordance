@@ -49,32 +49,6 @@ We provide 9 Gradio apps with these models.
 
 All test images can be found at the folder "test_imgs".
 
-# Combining Multiple ControlNets
-
-ControlNets are composable: more than one ControlNet can be easily composed to multi-condition control.
-
-Right now this feature is in experimental stage in the [Mikubill' A1111 Webui Plugin](https://github.com/Mikubill/sd-webui-controlnet):
-
-![p](github_page/multi2.png)
-
-![p](github_page/multi.png)
-
-As long as the models are controlling the same SD, the "boundary" between different research projects does not even exist. This plugin also allows different methods to work together!
-
-# Use ControlNet in Any Community Model (SD1.X)
-
-This is an experimental feature.
-
-[See the steps here](https://github.com/lllyasviel/ControlNet/discussions/12).
-
-Or you may want to use the [Mikubill' A1111 Webui Plugin](https://github.com/Mikubill/sd-webui-controlnet) which is plug-and-play and does not need manual merging.
-
-# Annotate Your Own Data
-
-We provide simple python scripts to process images.
-
-[See a gradio example here](docs/annotator.md).
-
 # Train with Your Own Data
 
 Training a ControlNet is as easy as (or even easier than) training a simple pix2pix. 
