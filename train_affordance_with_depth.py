@@ -9,8 +9,9 @@ from cldm.model import create_model, load_state_dict
 
 
 # Configs
-resume_path = './models/control_sd15_ini.ckpt'
-batch_size = 1
+# resume_path = './models/control_sd15_ini3.ckpt'
+resume_path = '/proj/control-net-affordance/lightning_logs/version_21/checkpoints/epoch=5-step=6011.ckpt'
+batch_size = 2
 logger_freq = 100
 learning_rate = 1e-5
 sd_locked = True

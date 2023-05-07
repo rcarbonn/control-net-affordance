@@ -21,7 +21,7 @@ class ADE20kAffordanceDataset(Dataset):
     def __init__(self, data_dir, data_type='training'):
         self.ade20k_path = os.path.join(data_dir, 'ADE20K_2021_17_01')
         self.affordance_path = os.path.join(data_dir, 'ADE-Affordance')
-        self.prompt_path = os.path.join(data_dir, 'prompt')
+        self.prompt_path = os.path.join(self.prompt_path, 'ade20k_captions.txt')
         self.data_dir = data_dir
         self.data_type = data_type
         

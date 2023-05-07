@@ -31,7 +31,7 @@ def img_to_depth(input_image, image_resolution=512, detect_resolution=384):
         H, W, C = img.shape
 
         detected_map = cv2.resize(detected_map, (W, H), interpolation=cv2.INTER_LINEAR)
-        detected_map = detected_map / 255.0
+        detected_map = detected_map
 
     return detected_map
 

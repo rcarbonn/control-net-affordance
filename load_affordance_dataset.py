@@ -62,7 +62,7 @@ class ADE20kAffordanceDataset(Dataset):
         # ctr_file_name = os.path.join(self.control_path,'/test{}.png'.format(idx))
         img_file_name = self.ade20k_path+'/src'+str(idx)+'.png'
         ctr_file_name = self.control_path+'/test'+str(idx)+'.png'
-        prompt = self.prompt_list[idx]
+        prompt = self.prompt_list[idx].replace('caption:','')
         # i = int(self.affordance_train_paths[idx].split('_')[-1].split('.')[0]) - 1
         # img_file_name = os.path.join(self.data_dir, '{}/{}'.format(self.index_ade20k['folder'][i], self.index_ade20k['filename'][i]))
         # seg_file_name = img_file_name.replace('.jpg', '_seg.png')
@@ -95,9 +95,9 @@ class ADE20kAffordanceDataset(Dataset):
         
         # affordance_seg = Image.fromarray(affordance_seg)
         target = np.asarray(Image.open(img_file_name))
-        # target = target/127.5 - 1
+        target = target/127.5 - 1
         source = np.asarray(Image.open(ctr_file_name))
-        # source = source/255.0
+        source = source/255.0
         # prompt = self.prompt_dict[prompt_id]
         
         return dict(jpg = target, txt = prompt,  hint = source)
