@@ -42,8 +42,13 @@ Download ControlNet weights for affordance + midas depth masks from here: https:
 Place the weights in the models folder
 
 #### Training
-Minimum system requirements:
+**Minimum system requirements:**
 A10 GPU with 24GB VRAM
+
+First run 
+```
+bash aff_setup/setup.bash
+```
 
 To train controlnet on affordance conditioning run:
 ```
@@ -54,7 +59,7 @@ To train controlnet on depth + affordance conditioning run:
 python train_affordance_with_depth.py
 ```
 #### Inference
-Minimum system requirements:
+**Minimum system requirements:**
 K80 GPU with 12GB VRAM should suffice
 
 Launch a gradio app where you can upload your images and run inference:
