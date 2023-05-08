@@ -155,14 +155,14 @@ class AutoencoderKL(pl.LightningModule):
         if self.learn_logvar:
             print(f"{self.__class__.__name__}: Learning logvar")
             ae_params_list.append(self.loss.logvar)
-        # opt_ae = torch.optim.Adam(ae_params_list,
-        #                           lr=lr, betas=(0.5, 0.9))
-        # opt_disc = torch.optim.Adam(self.loss.discriminator.parameters(),
-        #                             lr=lr, betas=(0.5, 0.9))
-        opt_ae = bnb.optim.Adam8bit(ae_params_list,
+        opt_ae = torch.optim.Adam(ae_params_list,
                                   lr=lr, betas=(0.5, 0.9))
-        opt_disc = bnb.optim.Adam8bit(self.loss.discriminator.parameters(),
+        opt_disc = torch.optim.Adam(self.loss.discriminator.parameters(),
                                     lr=lr, betas=(0.5, 0.9))
+        # opt_ae = bnb.optim.Adam8bit(ae_params_list,
+        #                           lr=lr, betas=(0.5, 0.9))
+        # opt_disc = bnb.optim.Adam8bit(self.loss.discriminator.parameters(),
+        #                             lr=lr, betas=(0.5, 0.9))
         return [opt_ae, opt_disc], []
 
     def get_last_layer(self):

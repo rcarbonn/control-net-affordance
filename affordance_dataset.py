@@ -5,6 +5,7 @@ import pickle as pkl
 
 from PIL import Image
 from torch.utils.data import Dataset
+from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.utils import save_image
 import cv2
@@ -117,27 +118,25 @@ class ADE20kAffordanceDataset(Dataset):
             affordance_seg[obj_ids == obj] = AFFORDANCE_COLOR_CODES['grasp']
         
         affordance_seg = Image.fromarray(affordance_seg)
-        target = np.asarray(self.transform_target(Image.open(img_file_name)))
+        target = np.asarray(self.transform_target(Image.open(img_file_name).convert('RGB')))
         target = target/127.5 - 1
         source = np.array(self.transform_source(affordance_seg))
         source = source/255.0
         
-        return dict(jpg = target, txt = prompt,  hint = source)
+        return dict(jpg = target, txt = prompt,  hint = source, id=prompt_id)
 
 
 if __name__ == '__main__':
-    data_dir = '/home/alchemist/storage/vlr_data'
-    dataset = ADE20kAffordanceDataset(data_dir, data_type='val')
+    data_dir = '/home/ubuntu/vlr_proj'
+    dataset = ADE20kAffordanceDataset(data_dir)
+    dataloader = DataLoader(dataset, num_workers=0, batch_size=4, shuffle=True)
     print(len(dataset))
-    for i in [17,22,30,43]:
-        data = dataset[i]
-        jpg = data['jpg']
-        hint = data['hint']
-        txt = data['txt']
-        print(txt)
-        print(jpg.shape, hint.shape)
-        hint_img = Image.fromarray((hint*255).astype(np.uint8))
-        jpg_img = Image.fromarray(((jpg+1)*127.5).astype(np.uint8))
-        hint_img.save("val_hint_{}.png".format(i))
-        jpg_img.save("val_jpg_{}.png".format(i))
-        # save_image([hint], 'val_hint_{}.png'.format(i))
+    for i,d in enumerate(dataloader):
+        print(i, d.keys(), d["id"])
+    # for i in range(len(dataset)):
+    #     data = dataset[i]
+    #     jpg = data['jpg']
+    #     hint = data['hint']
+    #     txt = data['txt']
+    #     print(i, jpg.shape, hint.shape, len(txt))
+        # save_image([jpg, hint], 'test{}.png'.format(i))
