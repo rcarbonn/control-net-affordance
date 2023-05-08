@@ -1,4 +1,4 @@
-name: control
+name: aff_control
 channels:
   - pytorch
   - defaults
